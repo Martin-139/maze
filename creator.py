@@ -24,6 +24,8 @@ class Maze:
             full.append(line)
         self.maze = full
 
+        self.create()
+
     def create(self):
         # pick random wall to start
         start_x = random.randint(1, self.width-2)
@@ -52,6 +54,9 @@ class Maze:
         # make remaining 'edges' a wall
         for i, line in enumerate(self.maze):
             self.maze[i] = [block.replace(self.edge, self.wall) for block in line]
+
+        self.maze[self.height-2][1] = 'A '
+        self.maze[1][self.width-2] = ' B'
 
     # add walls around a block to list
     def setwalls(self, y, x):
@@ -88,11 +93,10 @@ class Maze:
 
 
 def print_maze(maze):
-    for r in m.maze:
+    for r in maze.maze:
         print(''.join(x for x in r))
     print('-' * 25)
 
 if __name__ == '__main__':
     m = Maze(int(sys.argv[1]), int(sys.argv[2]))
-    m.create()
     print_maze(m)
