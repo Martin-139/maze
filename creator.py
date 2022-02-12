@@ -55,8 +55,8 @@ class Maze:
         for i, line in enumerate(self.maze):
             self.maze[i] = [block.replace(self.edge, self.wall) for block in line]
 
-        self.maze[self.height-2][1] = 'A '
-        self.maze[1][self.width-2] = ' B'
+        self.maze[self.height-2][1] = 'A'
+        self.maze[1][self.width-2] = 'B'
 
     # add walls around a block to list
     def setwalls(self, y, x):
