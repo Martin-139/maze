@@ -1,5 +1,4 @@
-import creator, random, os
-maze = creator.Maze(50, 25).maze
+import creator, random, os, sys
 
 start = 'A'
 end = 'B'
@@ -52,14 +51,8 @@ class QueueFrontier(StackFrontier):
         self.frontier = []
         self.remove_from = 0
 
-# ---------------------------------------- Algorithms -------------------------------------------------
-
-'''
-Searches every path to the end
-'''
-class Depth_first:
+class Solver:
     global maze
-    frontier = StackFrontier()
 
     # find the starting point, create new frontier
     def __init__(self):
@@ -68,12 +61,7 @@ class Depth_first:
         self.count = 0
         self.solution = [x[:] for x in maze]
         self.explored = []
-        self.special()
         self.solve()
-
-    # for every other inhereting algorithms
-    def special(self):
-        pass
 
     def solve(self):
         while True:
@@ -130,25 +118,45 @@ class Depth_first:
             y,x = c
             self.solution[y][x] = '*'
 
+# ---------------------------------------- Algorithms -------------------------------------------------
+
+'''
+Searches every path to the end
+'''
+class Depth_first(Solver):
+    def __init__(self):
+        self.frontier = StackFrontier()
+        super().__init__()
 
 '''
 Searches all paths at once
 '''
-class Breadth_first(Depth_first):
-    frontier = QueueFrontier()
-
+class Breadth_first(Solver):
+    def __init__(self):
+        self.frontier = QueueFrontier()
+        super().__init__()
 '''
 Picks the best node based on distance from the end
 '''
-class Best_first(Depth_first):
-    def special(self):
+class Best_first(Solver):
+    def __init__(self):
+        self.frontier = StackFrontier()
         self.end = self.find_block(end)
+        super().__init__()
 
     def find_neighbors(self, node):
         y,x = node.state
         n = []
+        calculated = []
         for direction,state in enumerate([(y+1, x), (y-1, x), (y, x+1), (y, x-1)]):
-            n.append((state[0],state[1],direction,self.manhattan_from(state, self.end)))
+            m = self.manhattan_from(state, self.end)
+            if m in calculated:
+                if abs(y - self.end[0]) > abs(x - self.end[1]):
+                    m += 0.5
+                else:
+                    m -= 0.5
+            calculated.append(m)
+            n.append((state[0],state[1],direction,m))
         # sort n based on distance from finish
         n.sort(key = lambda x:x[3])
         n.reverse()
@@ -161,10 +169,36 @@ class Best_first(Depth_first):
 
 
 
+def build(alg):
+    solutions = []
+    if 'D' in alg:
+        x = Depth_first()
+        solutions.append((x.solution, x.count, 'depth'))
+    if 'B' in alg:
+        x = Breadth_first()
+        solutions.append((x.solution, x.count, 'breadth'))
+    if 'G' in alg or solutions == []:
+        x = Best_first()
+        solutions.append((x.solution, x.count, 'greedy best'))
+    return solutions
 
 if __name__ == '__main__':
-    print_maze(maze)
-    s = Best_first()
-    input()
-    print_maze(s.solution)
-    print('count = ', s.count)
+    solved = []
+    try:
+        width, height = int(sys.argv[1]), int(sys.argv[2])
+        maze = creator.Maze(width, height).maze
+        solved = build(sys.argv[3].upper())
+        print_maze(maze)
+        input()
+
+    except:
+        width, height = int(input('Width in characters: ')), int(input('Height in characters: '))
+        maze = creator.Maze(width, height).maze
+        print_maze(maze)
+        print('Aglorithms (D - Depth first; B - Breadth first; G - Greedy best search)')
+        algorithms = input('Pick one or more: ').upper()
+        solved = build(algorithms)
+
+    for s in solved:
+        print_maze(s[0])
+        print('count = ', s[1], f'({s[2]})')
