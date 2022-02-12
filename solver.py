@@ -6,6 +6,8 @@ end = 'B'
 wall = '[]'
 
 def print_maze(maze):
+    if os.name == 'nt':
+        os.system('cls')
     for r in maze:
         for b in r:
             if b == wall:
@@ -17,7 +19,6 @@ def print_maze(maze):
             else:
                 print('\u001b[40m  ', end='')
         print()
-    print('-' * 25)
 
 class Node:
     def __init__(self, state, parent, action):
@@ -165,5 +166,5 @@ if __name__ == '__main__':
     print_maze(maze)
     s = Best_first()
     input()
-    print('count = ', s.count)
     print_maze(s.solution)
+    print('count = ', s.count)
