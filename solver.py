@@ -1,8 +1,10 @@
-import creator, random, os, sys
+import creator
+import random, os, sys, time
 
 start = 'A'
 end = 'B'
 wall = '[]'
+maze = None
 
 def print_maze(maze):
     if os.name == 'nt':
@@ -52,14 +54,14 @@ class QueueFrontier(StackFrontier):
         self.remove_from = 0
 
 class Solver:
-    global maze
-
     # find the starting point, create new frontier
-    def __init__(self):
+    def __init__(self, m):
+        self.s = time.time()
+        self.maze = m
         self.init = Node(self.find_block(start), None, None)
         self.frontier.add(self.init)
         self.count = 0
-        self.solution = [x[:] for x in maze]
+        self.solution = [x[:] for x in self.maze]
         self.explored = []
         self.solve()
 
@@ -69,7 +71,9 @@ class Solver:
             node = self.frontier.remove()
             state = node.state
             # if the state is goal state
-            if maze[state[0]][state[1]] == end:
+            if self.maze[state[0]][state[1]] == end:
+                self.e = time.time()
+                self.time = self.e - self.s
                 self.print_solution(node)
                 break
             else:
@@ -97,15 +101,14 @@ class Solver:
         for n in neighbors:
             i,j,d = n[0], n[1], n[2]
             if not self.is_explored((i,j)) and not self.frontier.contains_state((i,j)):
-                if not maze[i][j] == wall:
+                if not self.maze[i][j] == wall:
                     child = Node((i,j), node, d)
                     self.frontier.add(child)
 
-
     def find_block(self, block):
-        for row in maze:
+        for row in self.maze:
             if block in row:
-                return (maze.index(row), row.index(block))
+                return (self.maze.index(row), row.index(block))
 
     def print_solution(self, end_node):
         path = []
@@ -124,25 +127,28 @@ class Solver:
 Searches every path to the end
 '''
 class Depth_first(Solver):
-    def __init__(self):
+    def __init__(self, m):
         self.frontier = StackFrontier()
-        super().__init__()
+        super().__init__(m)
 
 '''
 Searches all paths at once
 '''
 class Breadth_first(Solver):
-    def __init__(self):
+    def __init__(self, m):
         self.frontier = QueueFrontier()
-        super().__init__()
+        super().__init__(m)
 '''
 Picks the best node based on distance from the end
 '''
 class Best_first(Solver):
-    def __init__(self):
+    def __init__(self, m, e = end):
         self.frontier = StackFrontier()
-        self.end = self.find_block(end)
-        super().__init__()
+        self.maze = m
+        self.height = len(self.maze)
+        self.width = len(self.maze[0])
+        self.end = self.find_block(e)
+        super().__init__(m)
 
     def find_neighbors(self, node):
         y,x = node.state
@@ -151,7 +157,7 @@ class Best_first(Solver):
         for direction,state in enumerate([(y+1, x), (y-1, x), (y, x+1), (y, x-1)]):
             m = self.manhattan_from(state, self.end)
             if m in calculated:
-                if abs(y - self.end[0]) > abs(x - self.end[1]):
+                if abs(abs(y - self.end[0]) - abs(x - self.end[1])) > (self.height+self.width)*0.04:
                     m += 0.5
                 else:
                     m -= 0.5
@@ -172,14 +178,14 @@ class Best_first(Solver):
 def build(alg):
     solutions = []
     if 'D' in alg:
-        x = Depth_first()
-        solutions.append((x.solution, x.count, 'depth'))
+        x = Depth_first(maze)
+        solutions.append((x.solution, x.count, 'depth', x.time))
     if 'B' in alg:
-        x = Breadth_first()
-        solutions.append((x.solution, x.count, 'breadth'))
+        x = Breadth_first(maze)
+        solutions.append((x.solution, x.count, 'breadth', x.time))
     if 'G' in alg or solutions == []:
-        x = Best_first()
-        solutions.append((x.solution, x.count, 'greedy best'))
+        x = Best_first(maze)
+        solutions.append((x.solution, x.count, 'greedy best', x.time))
     return solutions
 
 if __name__ == '__main__':
@@ -201,4 +207,4 @@ if __name__ == '__main__':
 
     for s in solved:
         print_maze(s[0])
-        print('count = ', s[1], f'({s[2]})')
+        print('count = ', s[1], f'({s[2]})', f'time={s[3]}')
