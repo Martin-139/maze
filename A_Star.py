@@ -42,6 +42,7 @@ class Dijkstra():
         self.width = len(self.maze[0])
         self.frontier = Frontier()
         self.solution = [x[:] for x in self.maze]
+        self.end = self.find_block(end)
         self.create_nodes()
         # self.all_paths() # experimental
         self.solve()
@@ -66,7 +67,6 @@ class Dijkstra():
                     node = Node(state=(y,x), tentative_dist=0)
                 elif block == end:
                     node = Node(state=(y,x))
-                    self.end = (y,x)
 
                 # count distance from nearest neighbor and add it to list
                 if node:
@@ -88,6 +88,8 @@ class Dijkstra():
                                 current.add_neighbor(node, dist)
                                 node.add_neighbor(current, dist)
                                 break
+                    if node.manhattan == 0:
+                        node.manhattan = self.manhattan(node)
         self.frontier.sort()
 
     def get_neighbors(self, y, x):
@@ -125,19 +127,22 @@ class Dijkstra():
         self.unvisited = Frontier()
         self.unvisited.add(self.frontier.frontier[0])
         fin = False
+        self.count = 0
         while True:
+            # next node is the first in unvisited
             node = self.unvisited.frontier[0]
             for neighbor in node.neighbors:
                 n_node, distance = neighbor
                 if n_node not in self.visited:
 
+                    # if we hit the goal
                     if n_node.state == self.end:
                         n_node.parent = node
                         self.end_node = n_node
                         fin = True
                         break
 
-                    self.unvisited.add(n_node)
+                    # count the tentative distance
                     old = n_node.tentative_dist
                     new = distance + node.tentative_dist
                     if old is not float('inf'):
@@ -147,12 +152,13 @@ class Dijkstra():
                     else:
                         n_node.tentative_dist = new
                         n_node.parent = node
-
-                    if n_node.manhattan == 0:
-                        n_node.manhattan = self.manhattan(n_node)
                     n_node.update_heuristic()
 
+                    self.unvisited.add(n_node)
+
+
             self.visited.append(node)
+            self.count += 1
             self.unvisited.sort()
             self.unvisited.frontier.pop(0)
             if fin:
@@ -170,6 +176,7 @@ class Dijkstra():
         while node.parent is not None:
             path.append(node.state)
             node = node.parent
+        path.append(node.state)
 
         path = self.fill_path(path)
 
@@ -177,6 +184,8 @@ class Dijkstra():
             y,x = c
             self.solution[y][x] = '*'
             i,j = self.end_node.state
+            self.solution[i][j] = end
+            i,j = node.state
             self.solution[i][j] = end
 
         solver.print_maze(self.solution)
@@ -210,24 +219,26 @@ class Dijkstra():
                 pass
         return new_path
 
+    def find_block(self, block):
+        for row in self.maze:
+            if block in row:
+                return (self.maze.index(row), row.index(block))
+
 class A_star(Dijkstra):
     def __init__(self, m):
         super().__init__(m)
 
     def manhattan(self, node):
         state = node.state
-        return (self.height + self.width) - (abs(self.end[0]-state[0]) + abs(self.end[1]-state[1]))
+        return abs(self.end[0]-state[0]) + abs(self.end[1]-state[1])
 
 
 if __name__ == '__main__':
     m = creator.Maze(100,50).maze
     s = time.time()
 
-    b = solver.Breadth_first(m)
-    solver.print_maze(b.solution)
-    print(b.time)
     d = A_star(m)
     # d = Dijkstra(m)
 
     e = time.time()
-    print(e-s)
+    print(e-s, d.count)
