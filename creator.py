@@ -8,9 +8,9 @@ class Maze:
         self.width = width
         self.height = height
 
-        self.wall = '[]'
-        self.cell = '  '
-        self.edge = 'e'
+        self.wall = 1
+        self.cell = 2
+        self.edge = 5
         self.walls = []
 
         full = []
@@ -52,11 +52,15 @@ class Maze:
             self.walls.remove(rand)
 
         # make remaining 'edges' a wall
-        for i, line in enumerate(self.maze):
-            self.maze[i] = [block.replace(self.edge, self.wall) for block in line]
+        for row in range(len(self.maze)):
+            self.maze[row][0] = self.wall
+            self.maze[row][self.width-1] = self.wall
+        for col in range(len(self.maze[0])):
+            self.maze[0][col] = self.wall
+            self.maze[self.height-1][col] = self.wall
 
-        self.maze[self.height-2][1] = 'A'
-        self.maze[1][self.width-2] = 'B'
+        self.maze[self.height-2][1] = 3
+        self.maze[1][self.width-2] = 4
 
     # add walls around a block to list
     def setwalls(self, y, x):

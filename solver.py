@@ -1,9 +1,9 @@
 import creator
 import random, os, sys, time
 
-start = 'A'
-end = 'B'
-wall = '[]'
+start = 3
+end = 4
+wall = 1
 maze = None
 
 def print_maze(maze):
