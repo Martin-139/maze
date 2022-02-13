@@ -9,6 +9,7 @@ maze = None
 def print_maze(maze):
     if os.name == 'nt':
         os.system('cls')
+        print('You can only see one at once on Windows')
     for r in maze:
         for b in r:
             if b == wall:
@@ -157,7 +158,7 @@ class Best_first(Solver):
         for direction,state in enumerate([(y+1, x), (y-1, x), (y, x+1), (y, x-1)]):
             m = self.manhattan_from(state, self.end)
             if m in calculated:
-                if abs(abs(y - self.end[0]) - abs(x - self.end[1])) > (self.height+self.width)*0.04:
+                if abs(y - self.end[0]) > abs(x - self.end[1]):
                     m += 0.5
                 else:
                     m -= 0.5
