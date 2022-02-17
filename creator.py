@@ -1,7 +1,10 @@
-import sys, random
+import sys
+import random
 
 # Randomized Prim's algorithm
 # with the way the maze is built, it is solvable when you go from anywhere to anywhere
+
+
 class Maze:
     # initialize and create maze full of 'unvisited' blocks
     def __init__(self, width, height):
@@ -41,12 +44,12 @@ class Maze:
             new_cell = self.check_wall(rand)
             if not new_cell == False:
                 try:
-                    y,x = new_cell[0], new_cell[1]
+                    y, x = new_cell[0], new_cell[1]
                     self.maze[y][x] = self.cell
                     self.maze[rand[0]][rand[1]] = self.cell
-                    self.setwalls(y,x)
-                except:
-                    pass # just don't create a path (probably out of bounds)
+                    self.setwalls(y, x)
+                except IndexError:
+                    pass  # just don't create a path (probably out of bounds)
 
             # remove wall from the list
             self.walls.remove(rand)
@@ -64,23 +67,23 @@ class Maze:
 
     # add walls around a block to list
     def setwalls(self, y, x):
-        for i,j in [(y+1, x), (y-1, x), (y, x+1), (y, x-1)]:
+        for i, j in [(y+1, x), (y-1, x), (y, x+1), (y, x-1)]:
             try:
                 if not self.maze[i][j] == self.cell and not self.maze[i][j] == self.edge:
                     # self.maze[i][j] = self.wall (no longer needed when 'unvisited' is not used - possible bug later?)
                     self.walls.append((i, j))
-            except:
+            except IndexError:
                 pass
 
     # check if from the wall's neighboring blocks there is only one cell (+ return new cell's coordinates)
     def check_wall(self, wall):
-        y,x = wall[0], wall[1]
+        y, x = wall[0], wall[1]
         cells = 0
         location = None
-        for i,j in [(y+1, x), (y-1, x), (y, x+1), (y, x-1)]:
+        for i, j in [(y+1, x), (y-1, x), (y, x+1), (y, x-1)]:
             if self.maze[i][j] == self.cell:
                 cells += 1
-                location = (i,j)
+                location = (i, j)
         if cells == 1:
             # this formula finds the coordiantions of new cell (x or y raises/lowers by 2 appropriately)
             new_y = location[0] - 2*(location[0]-y)
@@ -91,15 +94,15 @@ class Maze:
             # prevent 'doubled edge' by changing the wall to cell if new_cell is supposed to be on the edge
             else:
                 self.maze[y][x] = self.cell
-                self.setwalls(y,x)
+                self.setwalls(y, x)
         return False
-
 
 
 def print_maze(maze):
     for r in maze.maze:
         print(''.join(x for x in r))
     print('-' * 25)
+
 
 if __name__ == '__main__':
     m = Maze(int(sys.argv[1]), int(sys.argv[2]))

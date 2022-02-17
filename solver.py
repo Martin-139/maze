@@ -1,25 +1,25 @@
 import creator
 import random, os, sys, time
 
-start = 3
-end = 4
-wall = 1
-maze = None
+START = 3
+END = 4
+WALL = 1
+MAZE = None
 
-def print_maze(maze):
+def print_maze(MAZE):
     if os.name == 'nt':
         os.system('cls')
         print('You can only see one at once on Windows')
-    for r in maze:
+    for r in MAZE:
         for b in r:
-            if b == wall:
-                print('\u001b[47m  \u001b[40m', end='') # (background colors)
-            elif b == start or b == end:
-                print('\u001b[44m  \u001b[40m', end='')
+            if b == WALL:
+                print('\u001b[47m  \u001b[40m', END='') # (background colors)
+            elif b == START or b == END:
+                print('\u001b[44m  \u001b[40m', END='')
             elif b == '*':
-                print('\u001b[41m  \u001b[40m', end='')
+                print('\u001b[41m  \u001b[40m', END='')
             else:
-                print('\u001b[40m  ', end='')
+                print('\u001b[40m  ', END='')
         print()
 
 class Node:
@@ -35,7 +35,7 @@ class StackFrontier:
         self.remove_from = -1
 
     def add(self, node):
-        self.frontier.append(node)
+        self.frontier.appEND(node)
 
     def empty(self):
         return len(self.frontier) == 0
@@ -58,11 +58,11 @@ class Solver:
     # find the starting point, create new frontier
     def __init__(self, m):
         self.s = time.time()
-        self.maze = m
-        self.init = Node(self.find_block(start), None, None)
+        self.MAZE = m
+        self.init = Node(self.find_block(START), None, None)
         self.frontier.add(self.init)
         self.count = 0
-        self.solution = [x[:] for x in self.maze]
+        self.solution = [x[:] for x in self.MAZE]
         self.explored = []
         self.solve()
 
@@ -72,14 +72,14 @@ class Solver:
             node = self.frontier.remove()
             state = node.state
             # if the state is goal state
-            if self.maze[state[0]][state[1]] == end:
+            if self.MAZE[state[0]][state[1]] == END:
                 self.e = time.time()
                 self.time = self.e - self.s
                 self.print_solution(node)
                 break
             else:
                 self.count += 1
-                self.explored.append(node)
+                self.explored.appEND(node)
                 neighbors = self.find_neighbors(node)
                 # add neighboring blocks to the frontier, with current node as parent
                 self.add_children(neighbors, node)
@@ -94,7 +94,7 @@ class Solver:
         y,x = node.state
         n = []
         for direction,state in enumerate([(y+1, x), (y-1, x), (y, x+1), (y, x-1)]):
-            n.append((state[0],state[1],direction))
+            n.appEND((state[0],state[1],direction))
         random.shuffle(n)
         return n
 
@@ -102,20 +102,20 @@ class Solver:
         for n in neighbors:
             i,j,d = n[0], n[1], n[2]
             if not self.is_explored((i,j)) and not self.frontier.contains_state((i,j)):
-                if not self.maze[i][j] == wall:
+                if not self.MAZE[i][j] == WALL:
                     child = Node((i,j), node, d)
                     self.frontier.add(child)
 
     def find_block(self, block):
-        for row in self.maze:
+        for row in self.MAZE:
             if block in row:
-                return (self.maze.index(row), row.index(block))
+                return (self.MAZE.index(row), row.index(block))
 
-    def print_solution(self, end_node):
+    def print_solution(self, END_node):
         path = []
-        node = end_node.parent
+        node = END_node.parent
         while node.parent is not None:
-            path.append(node.state)
+            path.appEND(node.state)
             node = node.parent
 
         for c in path:
@@ -125,7 +125,7 @@ class Solver:
 # ---------------------------------------- Algorithms -------------------------------------------------
 
 '''
-Searches every path to the end
+Searches every path to the END
 '''
 class Depth_first(Solver):
     def __init__(self, m):
@@ -140,15 +140,15 @@ class Breadth_first(Solver):
         self.frontier = QueueFrontier()
         super().__init__(m)
 '''
-Picks the best node based on distance from the end
+Picks the best node based on distance from the END
 '''
 class Best_first(Solver):
-    def __init__(self, m, e = end):
+    def __init__(self, m, e = END):
         self.frontier = StackFrontier()
-        self.maze = m
-        self.height = len(self.maze)
-        self.width = len(self.maze[0])
-        self.end = self.find_block(e)
+        self.MAZE = m
+        self.height = len(self.MAZE)
+        self.width = len(self.MAZE[0])
+        self.END = self.find_block(e)
         super().__init__(m)
 
     def find_neighbors(self, node):
@@ -156,21 +156,21 @@ class Best_first(Solver):
         n = []
         calculated = []
         for direction,state in enumerate([(y+1, x), (y-1, x), (y, x+1), (y, x-1)]):
-            m = self.manhattan_from(state, self.end)
+            m = self.manhattan_from(state, self.END)
             if m in calculated:
-                if abs(y - self.end[0]) > abs(x - self.end[1]):
+                if abs(y - self.END[0]) > abs(x - self.END[1]):
                     m += 0.5
                 else:
                     m -= 0.5
-            calculated.append(m)
-            n.append((state[0],state[1],direction,m))
+            calculated.appEND(m)
+            n.appEND((state[0],state[1],direction,m))
         # sort n based on distance from finish
         n.sort(key = lambda x:x[3])
         n.reverse()
 
         return n
 
-    # manhattan distance from end_node
+    # manhattan distance from END_node
     def manhattan_from(self, state, from_state):
         return abs(from_state[0]-state[0]) + abs(from_state[1]-state[1])
 
@@ -179,29 +179,29 @@ class Best_first(Solver):
 def build(alg):
     solutions = []
     if 'D' in alg:
-        x = Depth_first(maze)
-        solutions.append((x.solution, x.count, 'depth', x.time))
+        x = Depth_first(MAZE)
+        solutions.appEND((x.solution, x.count, 'depth', x.time))
     if 'B' in alg:
-        x = Breadth_first(maze)
-        solutions.append((x.solution, x.count, 'breadth', x.time))
+        x = Breadth_first(MAZE)
+        solutions.appEND((x.solution, x.count, 'breadth', x.time))
     if 'G' in alg or solutions == []:
-        x = Best_first(maze)
-        solutions.append((x.solution, x.count, 'greedy best', x.time))
+        x = Best_first(MAZE)
+        solutions.appEND((x.solution, x.count, 'greedy best', x.time))
     return solutions
 
 if __name__ == '__main__':
     solved = []
     try:
         width, height = int(sys.argv[1]), int(sys.argv[2])
-        maze = creator.Maze(width, height).maze
+        MAZE = creator.Maze(width, height).MAZE
         solved = build(sys.argv[3].upper())
-        print_maze(maze)
+        print_maze(MAZE)
         input()
 
     except:
         width, height = int(input('Width in characters: ')), int(input('Height in characters: '))
-        maze = creator.Maze(width, height).maze
-        print_maze(maze)
+        MAZE = creator.Maze(width, height).MAZE
+        print_maze(MAZE)
         print('Aglorithms (D - Depth first; B - Breadth first; G - Greedy best search)')
         algorithms = input('Pick one or more: ').upper()
         solved = build(algorithms)

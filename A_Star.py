@@ -1,10 +1,12 @@
-import creator, solver
 import time
+import creator
+import solver
 
-start = 3
-end = 4
-wall = 1
-cell = 2
+START = 3
+END = 4
+WALL = 1
+CELL = 2
+
 
 class Node:
     def __init__(self, state, tentative_dist=float('inf')):
@@ -21,6 +23,7 @@ class Node:
     def add_neighbor(self, node, dist):
         self.neighbors.append((node, dist))
 
+
 class Frontier:
     def __init__(self):
         self.frontier = []
@@ -29,12 +32,15 @@ class Frontier:
         self.frontier.append(node)
 
     def sort(self):
-        self.frontier.sort(key = lambda x:x.heuristic)
+        self.frontier.sort(key=lambda x: x.heuristic)
+
 
 '''
 Create 'nodes' on intersections instead of looking on every block.
 Then find the shortest path based on distance between neighboring nodes.
 '''
+
+
 class Dijkstra():
     def __init__(self, m):
         self.maze = [x[:] for x in m]
@@ -42,8 +48,9 @@ class Dijkstra():
         self.width = len(self.maze[0])
         self.frontier = Frontier()
         self.solution = [x[:] for x in self.maze]
-        self.end = self.find_block(end)
+        self.END = self.find_block(END)
         self.create_nodes()
+        # self.print_nodes()
         # self.all_paths() # experimental
         self.solve()
 
@@ -52,8 +59,8 @@ class Dijkstra():
         for y, row in enumerate(self.maze):
             for x, block in enumerate(row):
                 node = None
-                if block == cell:
-                    n = self.get_neighbors(y,x)
+                if block == CELL:
+                    n = self.get_neighbors(y, x)
                     # 2 neighbors
                     if len(n) == 2:
                         if not abs(n[0][0] - n[1][0]) == 1:
@@ -61,19 +68,19 @@ class Dijkstra():
                     # 1 neighbor
                     elif len(n) == 1:
                         continue
-                    node = Node(state=(y,x))
+                    node = Node(state=(y, x))
 
-                elif block == start:
-                    node = Node(state=(y,x), tentative_dist=0)
-                elif block == end:
-                    node = Node(state=(y,x))
+                elif block == START:
+                    node = Node(state=(y, x), tentative_dist=0)
+                elif block == END:
+                    node = Node(state=(y, x))
 
                 # count distance from nearest neighbor and add it to list
                 if node:
                     self.maze[y][x] = node
                     self.frontier.add(node)
                     for direction in range(2):
-                        i,j = y,x
+                        i, j = y, x
                         dist = 0
                         while True:
                             if direction == 1:
@@ -82,7 +89,7 @@ class Dijkstra():
                                 j -= 1
                             dist += 1
                             current = self.maze[i][j]
-                            if current == wall:
+                            if current == WALL:
                                 break
                             if isinstance(current, Node):
                                 current.add_neighbor(node, dist)
@@ -95,24 +102,25 @@ class Dijkstra():
     def get_neighbors(self, y, x):
         n = []
         for state in [(y+1, x), (y-1, x), (y, x+1), (y, x-1)]:
-            i,j = state
+            i, j = state
             try:
-                if not self.maze[i][j] == wall:
-                    n.append((i,j))
-            except:
+                if not self.maze[i][j] == WALL:
+                    n.append((i, j))
+            except IndexError:
                 pass
         return n
 
     def print_nodes(self):
         for n in self.frontier.frontier:
             self.maze[n.state[0]][n.state[1]] = '*'
-        # solver.print_maze(self.maze)
+        solver.print_maze(self.maze)
     # remove all paths, that don't lead anywhere (only 1 neighbor)
+
     def all_paths(self):
         while True:
             new_state = self.frontier.frontier.copy()
             for n in new_state:
-                if len(n.neighbors) == 1 and not n.state == self.end:
+                if len(n.neighbors) == 1 and not n.state == self.END:
                     new_state.remove(n)
                     neighbor, dist = n.neighbors[0][0], n.neighbors[0][1]
                     neighbor.neighbors.remove((n, dist))
@@ -136,7 +144,7 @@ class Dijkstra():
                 if n_node not in self.visited:
 
                     # if we hit the goal
-                    if n_node.state == self.end:
+                    if n_node.state == self.END:
                         n_node.parent = node
                         self.end_node = n_node
                         fin = True
@@ -155,7 +163,6 @@ class Dijkstra():
                     n_node.update_heuristic()
 
                     self.unvisited.add(n_node)
-
 
             self.visited.append(node)
             self.count += 1
@@ -181,19 +188,19 @@ class Dijkstra():
         path = self.fill_path(path)
 
         for c in path:
-            y,x = c
+            y, x = c
             self.solution[y][x] = '*'
-            i,j = self.end_node.state
-            self.solution[i][j] = end
-            i,j = node.state
-            self.solution[i][j] = end
+            i, j = self.end_node.state
+            self.solution[i][j] = END
+            i, j = node.state
+            self.solution[i][j] = END
 
         solver.print_maze(self.solution)
 
     def fill_path(self, path):
         new_path = []
         for index, state in enumerate(path):
-            y,x = state
+            y, x = state
             try:
                 y2, x2 = path[index + 1]
                 # on the same X
@@ -215,7 +222,7 @@ class Dijkstra():
                         while not y2+1 == y:
                             new_path.append((y, x))
                             y += 1
-            except:
+            except IndexError:
                 pass
         return new_path
 
@@ -224,17 +231,15 @@ class Dijkstra():
             if block in row:
                 return (self.maze.index(row), row.index(block))
 
-class A_star(Dijkstra):
-    def __init__(self, m):
-        super().__init__(m)
 
+class A_star(Dijkstra):
     def manhattan(self, node):
         state = node.state
-        return abs(self.end[0]-state[0]) + abs(self.end[1]-state[1])
+        return abs(self.END[0]-state[0]) + abs(self.END[1]-state[1])
 
 
 if __name__ == '__main__':
-    m = creator.Maze(100,50).maze
+    m = creator.Maze(100, 50).maze
     s = time.time()
 
     d = A_star(m)
