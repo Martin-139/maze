@@ -100,7 +100,7 @@ class Maze:
 
 def print_maze(maze):
     for r in maze.maze:
-        print(''.join(x for x in r))
+        print(''.join(str(x) for x in r))
     print('-' * 25)
 
 
